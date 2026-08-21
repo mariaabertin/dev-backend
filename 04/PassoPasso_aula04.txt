@@ -12,3 +12,12 @@ CRIAR O PROJETO
 8- chamar o navegador através da rota e disparar a mensagem para a tela 
 	8.1- instalar o express: npm i express
 9- instalar as dependências do banco de dados (mysql): npm add mysql2 express cors nodemon
+10- testar o servidor; npm run dev
+
+Criar o cliente
+11- criar um novo terminal
+12- criar cliente: npx create-react-app cliente
+	12.1- iniciar a pasta: cd cliente | npm start
+13- alterar arquivo css: cliente | src | index.css
+14- alterar o arquivo index.js
+15- criar o banco de dados
