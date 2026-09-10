@@ -1,91 +1,83 @@
 const express = require("express");
-const app = express('express');
-const mysql = require('mysql2');//isso pegara a versão mais atual do mysql que instalamos
+const mysql = require("mysql2");
 const cors = require("cors");
 
-const db = mysql.createPool({
-    host:"127.0.0.1",
-    user:"root",
-    port:3307,
-    password:"",
-    database:"crudealunos"
-})
+const app = express();
 
-/*app.get("/",(req, )=>{
-    /*let SQL = "INSERT INTO alunos (id,nome, idade) VALUES (null,'Maria','28')";
-    db.query(SQL,(err,result)=>{
-        console.log(err);
-    });
-
-   /*let SQL = "truncate table alunos";
-    db.query(SQL,(err,result)=>{
-        console.log(err);
-    });
-}) */
-app.use(cors({
-      origin: "http://localhost:3000"
-    }));
-    
+// Permite requisições de qualquer origem local para evitar bloqueios no desenvolvimento
+app.use(cors());
 app.use(express.json());
-app.get("/listar", (req, res) => {
-    let SQL = "SELECT * FROM alunos";
-    db.query(SQL, (err, result) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: "Erro ao listar alunos" });
-        } else {
-            res.json(result); // Enviar os dados dos alunos como resposta
-        }
-    });
+
+// Verifique se a porta do MySQL no XAMPP é 3306 ou 3307
+const db = mysql.createPool({
+  host: "127.0.0.1",
+  user: "root",
+  port: 3307, // Altere para 3307 apenas se alterou no my.ini do XAMPP
+  password: "",
+  database: "crudealunos"
 });
 
-app.delete("/excluir/:id", (req, res) => {
-    const alunoId = req.params.id;
-   // Execute uma consulta SQL para excluir o aluno com base no ID
-    const SQL = "DELETE FROM alunos WHERE id = ?";
-    db.query(SQL, [alunoId], (err, result) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: "Erro ao excluir aluno" });
-      } else {
-        res.json({ message: "Aluno excluído com sucesso" });
-      }
-    });
+// Teste de conexão com o banco de dados no terminal
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error("Erro ao conectar no MySQL (XAMPP):", err.message);
+  } else {
+    console.log("Conectado ao MySQL com sucesso!");
+    connection.release();
+  }
+});
+
+app.get("/listar", (req, res) => {
+  const SQL = "SELECT * FROM alunos";
+  db.query(SQL, (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar alunos" });
+    }
+    res.json(result);
   });
+});
 
-//app.use(cors());
+app.post("/register", (req, res) => {
+  const { nome, idade } = req.body;
+  const SQL = "INSERT INTO alunos(nome, idade) VALUES (?, ?)";
 
-
-app.post("/register", (req, res) => { //não tinha o req
-    const { nome, idade } = req.body;
-    let SQL = "INSERT INTO alunos(nome, idade) VALUES (?, ?)";
-    
-    db.query(SQL, [nome, idade], (err, result) => {
-        if (err) {
-            console.error(err);
-            res.status(500).json({ error: "Erro ao cadastrar aluno" });
-        } else {
-            // não tinha o envio da resposta
-            res.json({ message: "Aluno cadastrado com sucesso", id: result.insertId });
-        }
-    });
+  db.query(SQL, [nome, idade], (err, result) => {
+    if (err) {
+      console.error("Erro no INSERT:", err);
+      return res.status(500).json({ error: "Erro ao cadastrar aluno" });
+    }
+    res.json({ message: "Aluno cadastrado com sucesso", id: result.insertId });
+  });
 });
 
 app.put("/editar/:id", (req, res) => {
-    const alunoId = req.params.id;
-    const { nome, idade } = req.body;
-    // Execute uma consulta SQL para atualizar os dados do aluno com base no ID
-    const SQL = "UPDATE alunos SET nome = ?, idade = ? WHERE id = ?";
-    db.query(SQL, [nome, idade, alunoId], (err, result) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: "Erro ao editar aluno" });
-      } else {
-        res.json({ message: "Aluno editado com sucesso" });
-      }
-    });
-  });  
+  const alunoId = req.params.id;
+  const { nome, idade } = req.body;
+  const SQL = "UPDATE alunos SET nome = ?, idade = ? WHERE id = ?";
 
-app.listen(3001,()=>{
-    console.log("rodando servidor");
+  db.query(SQL, [nome, idade, alunoId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao editar aluno" });
+    }
+    res.json({ message: "Aluno editado com sucesso" });
+  });
+});
+
+app.delete("/excluir/:id", (req, res) => {
+  const alunoId = req.params.id;
+  const SQL = "DELETE FROM alunos WHERE id = ?";
+
+  db.query(SQL, [alunoId], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao excluir aluno" });
+    }
+    res.json({ message: "Aluno excluído com sucesso" });
+  });
+});
+
+app.listen(3001, () => {
+  console.log("Servidor rodando na porta 3001");
 });

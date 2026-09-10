@@ -2,36 +2,38 @@ import React, { useState } from 'react';
 import Axios from "axios";
 
 // Defina o componente CadastroAluno.
-function CadastroAluno() {
+function CadastroAluno({ onCadastroSucesso }) {
   // Defina os estados iniciais para 'values'.
   const [values, setValues] = useState({ nome: '', idade: '' });
 
-  // Exiba no console os valores do estado 'values'.
-  console.log(values);
-
   // Função para manipular a mudança nos campos de entrada e atualizar o estado 'values'.
-  const handleChangeValues = (value) => {
+  const handleChangeValues = (event) => {
     // Use a função de atualização do estado para garantir que os valores antigos sejam preservados.
     setValues(prevValue => ({
       ...prevValue, // Mantém os valores antigos do objeto.
-      [value.target.name]: value.target.value, // Atualiza o campo correspondente com o novo valor.
-    }))
+      [event.target.name]: event.target.value, // Atualiza o campo correspondente com o novo valor.
+    }));
   };
 
   // Função para lidar com o clique no botão de cadastro.
   const handleClickButton = (e) => {
-  e.preventDefault(); // Impede o recarregamento padrão da página
+    e.preventDefault(); // Impede o recarregamento padrão da página
 
-  // Faça uma solicitação POST para a URL especificada com os dados do aluno.
-  Axios.post("http://localhost:3000/register", {
-    nome: values.nome,
-    idade: values.idade
-  }).then((response) => { //mudar sintaxe para adicionar a resposta com os dados
-    console.log("Cadastrado com sucesso:", response.data); // Exiba a resposta da solicitação no console.
-  }).catch((error) => {
-    console.error("Erro no envio:", error);
-  });
-};
+    // Faça uma solicitação POST para a URL especificada com os dados do aluno.
+    Axios.post("http://localhost:3001/register", {
+      nome: values.nome,
+      idade: values.idade
+    }).then((response) => {
+      console.log("Cadastrado com sucesso:", response.data);
+      setValues({ nome: '', idade: '' });
+
+      if (onCadastroSucesso) {
+        onCadastroSucesso();
+      }
+    }).catch((error) => {
+      console.error("Erro no envio:", error);
+    });
+  };
 
   // Renderize o formulário de cadastro de aluno.
   return (
@@ -48,6 +50,7 @@ function CadastroAluno() {
                 className="form-control"
                 id="nome"
                 name='nome'
+                value={values.nome}
                 onChange={handleChangeValues}
               />
             </div>
@@ -58,6 +61,7 @@ function CadastroAluno() {
                 name='idade'
                 className="form-control"
                 id="idade"
+                value={values.idade}
                 onChange={handleChangeValues}
               />
             </div>
